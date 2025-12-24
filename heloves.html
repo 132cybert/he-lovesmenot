@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>他爱我吗？</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        .title {
+            font-size: 3.5rem;
+            background: linear-gradient(45deg, #1976d2, #0d47a1);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            font-weight: 700;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #424242;
+            margin-bottom: 20px;
+        }
+
+        .flower-container {
+            position: relative;
+            width: 350px;
+            height: 350px;
+            margin: 0 auto 40px;
+            animation: fadeIn 1s ease-out 0.5s both;
+        }
+
+        .flower-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70px;
+            height: 70px;
+            background: radial-gradient(circle, #ffd54f 0%, #ffb300 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 30px rgba(255, 213, 79, 0.5);
+            z-index: 10;
+        }
+
+        .petal {
+            position: absolute;
+            width: 45px;
+            height: 90px;
+            background: linear-gradient(45deg, #ffffff 0%, #e3f2fd 100%);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            transform-origin: center bottom;
+        }
+
+        .petal:hover {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 6px 20px rgba(25, 118, 210, 0.3);
+            background: linear-gradient(45deg, #ffffff 0%, #bbdefb 100%);
+        }
+
+        .petal.falling {
+            animation: petalFall 1s ease-in forwards;
+        }
+
+        .petal:nth-child(1) { top: 20px; left: 152px; transform: rotate(0deg); }
+        .petal:nth-child(2) { top: 60px; right: 40px; transform: rotate(45deg); }
+        .petal:nth-child(3) { top: 152px; right: 20px; transform: rotate(90deg); }
+        .petal:nth-child(4) { bottom: 60px; right: 40px; transform: rotate(135deg); }
+        .petal:nth-child(5) { bottom: 20px; left: 152px; transform: rotate(180deg); }
+        .petal:nth-child(6) { bottom: 60px; left: 40px; transform: rotate(225deg); }
+        .petal:nth-child(7) { top: 152px; left: 20px; transform: rotate(270deg); }
+        .petal:nth-child(8) { top: 60px; left: 40px; transform: rotate(315deg); }
+
+        .form-container {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            animation: fadeInUp 1s ease-out 0.8s both;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .form-title {
+            font-size: 1.3rem;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(25, 118, 210, 0.2);
+            border-top: 4px solid #1976d2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            animation: modalFadeIn 0.5s ease-out;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        .modal-header {
+            font-size: 2rem;
+            color: #1976d2;
+            margin-bottom: 20px;
+            font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .gua-symbol {
+            font-size: 4rem;
+            color: #667eea;
+            margin: 20px 0;
+            animation: bounce 1s ease-in-out infinite alternate;
+        }
+
+        .gua-name {
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .gua-element {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .gua-analysis {
+            font-size: 1rem;
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        .close-btn {
+            background: linear-gradient(45deg, #1976d2 0%, #42a5f5 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(25, 118, 210, 0.3);
+        }
+
+        .close-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes petalFall {
+            to {
+                transform: translateY(300px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes bounce {
+            to { transform: scale(1.1); }
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2.5rem;
+            }
+            
+            .flower-container {
+                width: 280px;
+                height: 280px;
+            }
+            
+            .petal {
+                width: 35px;
+                height: 70px;
+            }
+            
+            .form-container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 class="title">他爱我吗？</h1>
+        <p class="subtitle">摘掉花瓣，揭示命运</p>
+    </div>
+    
+    <div class="flower-container">
+        <div class="flower-center"></div>
+        <div class="petal" onclick="pluckPetal(this)"></div>
+        <div class="petal" onclick="pluckPetal(this)"></div>
+        <div class="petal" onclick="pluckPetal(this)"></div>
+        <div class="petal" onclick="pluckPetal(this)"></div>
+        <div class="petal" onclick="pluckPetal(this)"></div>
+        <div class="petal" onclick="pluckPetal(this)"></div>
+        <div class="petal" onclick="pluckPetal(this)"></div>
+        <div class="petal" onclick="pluckPetal(this)"></div>
+        <div class="petal" onclick="pluckPetal(this)"></div>
+    </div>
+    
+    <div class="form-container">
+        <div class="form-title">💕 可选输入，互联网知道您是谁</div>
+        <div class="form-group">
+            <label for="userSurname">您的姓氏</label>
+            <input type="text" id="userSurname" placeholder="请输入您的姓氏">
+        </div>
+        <div class="form-group">
+            <label for="hisSurname">他的姓氏</label>
+            <input type="text" id="hisSurname" placeholder="请输入他的姓氏">
+        </div>
+        <div class="form-group">
+            <label for="meetingTime">初遇时辰</label>
+            <input type="text" id="meetingTime" placeholder="例如：下午3点">
+        </div>
+    </div>
+    
+    <div class="loading" id="loading">
+        <div class="loading-spinner"></div>
+    </div>
+    
+    <div class="modal" id="resultModal">
+        <div class="modal-content">
+            <div class="modal-header">🔮 您的结果</div>
+            <div class="gua-symbol" id="guaSymbol">☯</div>
+            <div class="gua-name" id="guaName">天作之合</div>
+            <div class="gua-element" id="guaElement">五行属性：金生水</div>
+            <div class="gua-analysis" id="guaAnalysis">
+                根据古老的八卦算法和您提供的信息，经过精密计算，结果显示：
+                你们之间有着深厚的缘分，他对你确实有着特别的感情。
+                这份感情如同春日暖阳，温柔而持久。建议你们多沟通交流，
+                珍惜这份来之不易的缘分。未来的道路虽然可能有挑战，
+                但只要彼此真心相待，定能收获美好的爱情。
+            </div>
+            <button class="close-btn" onclick="closeModal()">关闭</button>
+        </div>
+    </div>
+
+    <script>
+        let pluckedPetals = 0;
+        const totalPetals = 8;
+        
+        const results = [
+            {
+                symbol: "☯",
+                name: "天作之合",
+                element: "五行属性：金生水",
+                analysis: "你们之间有着深厚的缘分，他对你确实有着特别的感情。这份感情如同春日暖阳，温柔而持久。建议你们多沟通交流，珍惜这份来之不易的缘分。"
+            },
+            {
+                symbol: "☰",
+                name: "乾卦 - 大吉",
+                element: "五行属性：纯阳之金",
+                analysis: "乾为天，象征着积极向上的力量。他对你的感情纯真而强烈，就像天空一样广阔无垠。这是一个非常好的预兆，建议主动一些。"
+            },
+            {
+                symbol: "☷",
+                name: "坤卦 - 大地",
+                element: "五行属性：纯阴之土",
+                analysis: "坤为地，代表着包容与温柔。他对你的感情深厚而稳定，如同大地承载万物。这份感情需要时间培养，但最终会开花结果。"
+            },
+            {
+                symbol: "☲",
+                name: "离卦 - 光明",
+                element: "五行属性：火",
+                analysis: "离为火，象征着热情与光明。他对你的感情充满激情，就像火焰一样炽热。但要注意控制火候，避免过于激烈。"
+            }
+        ];
+
+        function pluckPetal(petal) {
+            if (petal.classList.contains('falling')) return;
+            
+            petal.classList.add('falling');
+            pluckedPetals++;
+            
+            // 播放花瓣飘落音效（模拟）
+            playPetalSound();
+            
+            setTimeout(() => {
+                petal.style.display = 'none';
+                
+                if (pluckedPetals === totalPetals) {
+                    setTimeout(() => {
+                        showLoading();
+                        setTimeout(() => {
+                            hideLoading();
+                            showResult();
+                        }, 2000);
+                    }, 500);
+                }
+            }, 1000);
+        }
+
+        function playPetalSound() {
+            // 创建音频上下文来播放简单的音效
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.1);
+                
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.1);
+            } catch (e) {
+                // 如果音频API不支持，静默处理
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function showResult() {
+            const randomResult = results[Math.floor(Math.random() * results.length)];
+            
+            document.getElementById('guaSymbol').textContent = randomResult.symbol;
+            document.getElementById('guaName').textContent = randomResult.name;
+            document.getElementById('guaElement').textContent = randomResult.element;
+            document.getElementById('guaAnalysis').textContent = randomResult.analysis;
+            
+            document.getElementById('resultModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('resultModal').style.display = 'none';
+            // 重置花瓣
+            resetFlower();
+        }
+
+        function resetFlower() {
+            pluckedPetals = 0;
+            const petals = document.querySelectorAll('.petal');
+            petals.forEach(petal => {
+                petal.classList.remove('falling');
+                petal.style.display = 'block';
+                petal.style.transform = '';
+            });
+        }
+
+        // 添加一些随机的背景动画效果
+        function createFloatingHearts() {
+            const heart = document.createElement('div');
+            heart.innerHTML = '💖';
+            heart.style.position = 'fixed';
+            heart.style.fontSize = Math.random() * 20 + 10 + 'px';
+            heart.style.left = Math.random() * 100 + '%';
+            heart.style.top = '100%';
+            heart.style.opacity = '0.7';
+            heart.style.pointerEvents = 'none';
+            heart.style.zIndex = '1';
+            heart.style.textShadow = '0 0 8px rgba(255, 255, 255, 0.8)';
+            
+            document.body.appendChild(heart);
+            
+            const duration = Math.random() * 3000 + 2000;
+            heart.animate([
+                { transform: 'translateY(0) rotate(0deg)', opacity: 0.7 },
+                { transform: `translateY(-${window.innerHeight + 100}px) rotate(${Math.random() * 360}deg)`, opacity: 0 }
+            ], {
+                duration: duration,
+                easing: 'ease-out'
+            }).onfinish = () => heart.remove();
+        }
+
+        // 每隔一段时间创建浮动的心形
+        setInterval(createFloatingHearts, 2000);
+
+        // 页面加载完成后的欢迎动画
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                alert('🌸 欢迎来到"他爱我吗"占卜花园！请摘掉花瓣来揭示您的爱情命运吧！');
+            }, 1000);
+        });
+
+        // 添加键盘事件支持
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // 防止页面滚动时的性能问题
+        let ticking = false;
+        function updateAnimation() {
+            // 这里可以添加滚动时的动画效果
+            ticking = false;
+        }
+
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                requestAnimationFrame(updateAnimation);
+                ticking = true;
+            }
+        });
+    </script>
+</body>
+</html>
